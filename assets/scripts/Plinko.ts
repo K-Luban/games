@@ -38,19 +38,18 @@ export class Plinko extends Component {
     generatePlinkoBoard() {
         const spacingX = 50; // Horizontal spacing between pegs
         const spacingY = 50; // Vertical spacing between rows
-        const startX = -(this.rows / 2) * spacingX; // Start position for the first row
-        console.log(startX);
-    
+        const startX = -(this.rows / 2) * spacingX + 10; // Start position for the first row
+        const startY = 230; // Start from the top of the parent node
+
         for (let row = 0; row < this.rows; row++) {
             // Start with 3 pegs at the top, and increase by 1 peg per row
             let numPegsInRow = 3 + row; 
             for (let col = 0; col < numPegsInRow; col++) {
                 // Calculate the position for each peg
                 const xPos = startX + col * spacingX + (spacingX / 2) * (this.rows - numPegsInRow);
-                const yPos = -row * spacingY;
+                const yPos = startY - row * spacingY; // Adjusted to start from the top
                 const pegPosition = new Vec3(xPos, yPos, 0);
-                //console.log(pegPosition+' xyz');
-    
+
                 // Instantiate and place the peg
                 const pegNode = instantiate(this.pegPrefab);
                 pegNode.setScale(0.5, 0.5, 0);

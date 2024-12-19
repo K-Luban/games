@@ -1,45 +1,39 @@
-import { _decorator, Collider, Collider2D, Component, CircleCollider2D, ICollisionEvent, IPhysics2DContact, Node, tween, Vec3, v2, Vec2, Contact2DType, PhysicsSystem2D } from 'cc';
+import { _decorator, Collider2D, Component, IPhysics2DContact, Node, Contact2DType, PhysicsSystem2D, Vec3, tween, EPhysics2DDrawFlags, Label, CircleCollider2D, Vec2, RigidBody2D } from 'cc';
 const { ccclass, property } = _decorator;
 
 @ccclass('Ball')
 export class Ball extends Component {
-
-    private startPosition: Vec3 = new Vec3(0, 0, 0);
-
-    private bouncePath: string[] = ["L", "R", "L", "L", "L", "R", "L", "L", "R", "R"];
     
-    start () {
-        // Registering callback functions for a single collider
-        let collider = this.getComponent(Collider2D);
+    start() {
+        const collider = this.getComponent(CircleCollider2D);
         if (collider) {
-            collider.on(Contact2DType.BEGIN_CONTACT, this.onBeginContact, this);
-        }
-
-        // Registering global contact callback functions
-        if (PhysicsSystem2D.instance) {
-            PhysicsSystem2D.instance.on(Contact2DType.BEGIN_CONTACT, this.onBeginContact, this);
+            collider.on(Contact2DType.BEGIN_CONTACT, this.onCollisionEnter, this);
         }
     }
 
-    onBeginContact (selfCollider: Collider2D, otherCollider: Collider2D, contact: IPhysics2DContact | null) {
-        // will be called once when two colliders begin to contact
-        console.log('onBeginContact');
-        //this.createBounceEffect();
+    onCollisionEnter(selfCollider: CircleCollider2D, otherCollider: CircleCollider2D) {
+        const rigidbody = selfCollider.getComponent(RigidBody2D);
+
+        if (rigidbody) {
+            console.log("Rigidbody found");
+            // Handle bounce using the physics system
+            const velocity = rigidbody.linearVelocity;
+            console.log("Velocity:", velocity);
+            if (velocity) {
+                const surfaceNormal = this.calculateCollisionNormal(otherCollider);
+                const newVelocity = this.reflect(velocity, surfaceNormal);
+                rigidbody.linearVelocity = newVelocity.multiplyScalar(0.8); // Apply damping
+            }
+        }
     }
 
-    createBounceEffect() {
-        this.startPosition = this.node.position.clone(); // Clone the starting position of the ball
+    calculateCollisionNormal(otherCollider: Collider2D): Vec2 {
+        return new Vec2(0, 1);
+    }
 
-        let randomDirection = Math.random();
-
-        let finalX = this.startPosition.x;
-        let finalY = this.startPosition.y;
-        console.log(finalX,finalY);
-
-        tween(this.node)
-        .to(0.5, {position: new Vec3(finalX+5, finalY+5, this.startPosition.z) })
-        .start();  // Start the tween animation
+    reflect(velocity: Vec2, normal: Vec2): Vec2 {
+        // Reflect velocity around the normal
+        const dot = velocity.dot(normal);
+        return velocity.subtract(normal.multiplyScalar(2 * dot));
     }
 }
-
-
